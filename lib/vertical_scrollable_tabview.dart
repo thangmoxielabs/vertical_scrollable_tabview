@@ -68,8 +68,11 @@ class VerticalScrollableTabView extends StatefulWidget {
   final String? _restorationId;
   final Clip _clipBehavior;
 
+  final bool scrollOnUserInteraction;
+
   const VerticalScrollableTabView({
     Key? key,
+    this.scrollOnUserInteraction = true,
 
     /// Custom parameters
     required AutoScrollController autoScrollController,
@@ -171,7 +174,9 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
       key: listViewKey,
       // NotificationListener 是一個由下往上傳遞通知，true 阻止通知、false 傳遞通知，確保指監聽滾動的通知
       // ScrollNotification => https://www.jianshu.com/p/d80545454944
-      child: NotificationListener<UserScrollNotification>(
+      child: (widget.scrollOnUserInteraction
+          ? NotificationListener<UserScrollNotification>.new
+          : NotificationListener<ScrollNotification>.new)(
         onNotification: onScrollNotification,
         child: Scrollbar(
           controller: widget._autoScrollController,
@@ -255,7 +260,7 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
 
   /// onScrollNotification of NotificationListener
   /// true表示消費掉當前通知不再向上一级NotificationListener傳遞通知，false則會再向上一级NotificationListener傳遞通知；
-  bool onScrollNotification(UserScrollNotification notification) {
+  bool onScrollNotification(ScrollNotification notification) {
     List<int> visibleItems = getVisibleItemsIndex();
     widget._tabController.animateTo(visibleItems[0]);
     return false;
