@@ -216,7 +216,7 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
         widget._listItemData.length,
         (index) {
           // 建立 itemKeys 的 Key
-          itemsKeys[index] = RectGetter.createGlobalKey();
+          itemsKeys.putIfAbsent(index, () => RectGetter.createGlobalKey());
           return buildItem(index);
         },
       )),
