@@ -25,13 +25,9 @@ class VerticalScrollableTabView extends StatefulWidget {
   /// TabBar Controller 用來讓 widget 監聽 TabBar 的 index 是否有更動
   final TabController _tabController;
 
-  /// Required a List<dynamic> Type，you can put your data that you wanna put in item
-  /// 要求 List<dynamic> 的結構，List 裡面可以放自己建立的 Object
-  final List<dynamic> _listItemData;
-
   /// A callback that return an Object inside _listItemData and the index of ListView.Builder
   /// A callback 用來回傳一個 _listItemData 裡面的 Object 型態和 ListView.Builder 的 index
-  final Widget Function(dynamic aaa, int index) _eachItemChild;
+  final Widget? Function(BuildContext, int) _itemBuilder;
 
   /// VerticalScrollPosition = is ann Animation style from scroll_to_index,
   /// It's show the item position in listView.builder
@@ -42,6 +38,8 @@ class VerticalScrollableTabView extends StatefulWidget {
   final List<Widget> _slivers;
 
   final AutoScrollController _autoScrollController;
+
+  final int tabCount;
 
   /// Copy Scrollbar
   final bool? _thumbVisibility;
@@ -77,8 +75,7 @@ class VerticalScrollableTabView extends StatefulWidget {
     /// Custom parameters
     required AutoScrollController autoScrollController,
     required TabController tabController,
-    required List<dynamic> listItemData,
-    required Widget Function(dynamic aaa, int index) eachItemChild,
+    required Widget? Function(BuildContext, int) itemBuilder,
     VerticalScrollPosition verticalScrollPosition =
         VerticalScrollPosition.begin,
 
@@ -108,9 +105,9 @@ class VerticalScrollableTabView extends StatefulWidget {
         ScrollViewKeyboardDismissBehavior.manual,
     String? restorationId,
     Clip clipBehavior = Clip.hardEdge,
+    required this.tabCount,
   })  : _tabController = tabController,
-        _listItemData = listItemData,
-        _eachItemChild = eachItemChild,
+        _itemBuilder = itemBuilder,
         _verticalScrollPosition = verticalScrollPosition,
         _autoScrollController = autoScrollController,
 
@@ -212,19 +209,19 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
 
   SliverList buildVerticalSliverList() {
     return SliverList(
-      delegate: SliverChildListDelegate(List.generate(
-        widget._listItemData.length,
-        (index) {
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
           // 建立 itemKeys 的 Key
           itemsKeys.putIfAbsent(index, () => RectGetter.createGlobalKey());
-          return buildItem(index);
+          return buildItem(context, index);
         },
-      )),
+      ),
     );
   }
 
-  Widget buildItem(int index) {
-    dynamic category = widget._listItemData[index];
+  Widget? buildItem(BuildContext context, int index) {
+    final child = widget._itemBuilder(context, index);
+    if (child == null) return null;
     return RectGetter(
       /// when announce GlobalKey，we can use RectGetter.getRectFromKey(key) to get Rect
       /// 宣告 GlobalKey，之後可以 RectGetter.getRectFromKey(key) 的方式獲得 Rect
@@ -233,7 +230,7 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
         key: ValueKey(index),
         index: index,
         controller: widget._autoScrollController,
-        child: widget._eachItemChild(category, index),
+        child: child,
       ),
     );
   }
@@ -241,7 +238,7 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
   /// Animation Function for tabBarListener
   /// This need to put inside TabBar onTap, but in this case we put inside tabBarListener
   void animateAndScrollTo(int index) async {
-    widget._tabController.animateTo(index);
+    widget._tabController.animateTo(index % widget.tabCount);
     switch (widget._verticalScrollPosition) {
       case VerticalScrollPosition.begin:
         widget._autoScrollController
@@ -262,7 +259,8 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
   /// true表示消費掉當前通知不再向上一级NotificationListener傳遞通知，false則會再向上一级NotificationListener傳遞通知；
   bool onScrollNotification(ScrollNotification notification) {
     List<int> visibleItems = getVisibleItemsIndex();
-    widget._tabController.animateTo(visibleItems[0]);
+    if (visibleItems.isEmpty) return false;
+    widget._tabController.animateTo(visibleItems[0] % widget.tabCount);
     return false;
   }
 
