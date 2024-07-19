@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vertical_scrollable_tabview/vertical_scrollable_tabview.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
+import 'package:vertical_scrollable_tabview/vertical_scrollable_tabview.dart';
 
 import 'category_section.dart';
 import 'example_data.dart';
@@ -63,10 +63,9 @@ class _MyHomePageState extends State<MyHomePage>
         autoScrollController: autoScrollController,
         scrollbarThumbVisibility: false,
         tabController: tabController,
-        listItemData: data,
+        tabCount: data.length,
         verticalScrollPosition: VerticalScrollPosition.begin,
-        eachItemChild: (object, index) =>
-            CategorySection(category: object as Category),
+        itemBuilder: (context, index) => CategorySection(category: data[index]),
         slivers: [
           SliverAppBar(
             pinned: true,
@@ -89,7 +88,8 @@ class _MyHomePageState extends State<MyHomePage>
                 return Tab(text: e.title);
               }).toList(),
               onTap: (index) {
-                VerticalScrollableTabBarStatus.setIndex(index);
+                autoScrollController.scrollToIndex(index,
+                    preferPosition: AutoScrollPosition.begin);
               },
             ),
           ),
