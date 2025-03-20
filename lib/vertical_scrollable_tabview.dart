@@ -40,6 +40,7 @@ class VerticalScrollableTabView extends StatefulWidget {
   final AutoScrollController _autoScrollController;
 
   final int tabCount;
+  final bool infiniteScroll;
 
   /// Copy Scrollbar
   final bool? _thumbVisibility;
@@ -106,6 +107,7 @@ class VerticalScrollableTabView extends StatefulWidget {
     String? restorationId,
     Clip clipBehavior = Clip.hardEdge,
     required this.tabCount,
+    this.infiniteScroll = true,
   })  : _tabController = tabController,
         _itemBuilder = itemBuilder,
         _verticalScrollPosition = verticalScrollPosition,
@@ -215,6 +217,7 @@ class _VerticalScrollableTabViewState extends State<VerticalScrollableTabView>
           itemsKeys.putIfAbsent(index, () => RectGetter.createGlobalKey());
           return buildItem(context, index);
         },
+        childCount: widget.infiniteScroll ? null : widget.tabCount,
       ),
     );
   }
